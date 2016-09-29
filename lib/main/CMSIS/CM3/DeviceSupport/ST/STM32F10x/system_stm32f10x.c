@@ -140,8 +140,8 @@ void SetSysClock(bool overclock)
     RCC->CFGR &= (uint32_t)((uint32_t)~(RCC_CFGR_PLLSRC | RCC_CFGR_PLLXTPRE | RCC_CFGR_PLLMULL));
     *RCC_CRH |= (uint32_t)0x8 << (RCC_CFGR_PLLMULL9 >> 16);
     GPIOC->ODR &= (uint32_t)~(CAN_MCR_RESET);
-	
-#if defined(CJMCU)
+
+#if defined(CJMCU) || defined (KFC32)
     // On CJMCU new revision boards (Late 2014) bit 15 of GPIOC->IDR is '1'.
     RCC_CFGR_PLLMUL = RCC_CFGR_PLLMULL9;
 #else
@@ -157,7 +157,12 @@ void SetSysClock(bool overclock)
             }
             // overclock=false : PLL configuration: PLLCLK = HSE * 9 = 72 MHz || HSE * 6 = 72 MHz
             // overclock=true  : PLL configuration: PLLCLK = HSE * 10 = 80 MHz || HSE * 7 = 84 MHz
+            #if defined (KFC32)
+            hse_value = 16000000;
+            RCC->CFGR |= (uint32_t)(RCC_CFGR_PLLSRC_HSE | RCC_CFGR_PLLMUL | RCC_CFGR_PLLXTPRE_HSE_Div2);
+            #else
             RCC->CFGR |= (uint32_t)(RCC_CFGR_PLLSRC_HSE | RCC_CFGR_PLLMUL);
+            #endif
             break;
         case SRC_HSI:
             // PLL configuration: PLLCLK = HSI / 2 * 16 = 64 MHz
