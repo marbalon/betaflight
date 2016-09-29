@@ -54,6 +54,7 @@ typedef enum {
     FEATURE_VTX = 1 << 24,
     FEATURE_RX_NRF24 = 1 << 25,
     FEATURE_SOFTSPI = 1 << 26,
+    FEATURE_RX_ELERES = 1 << 27,
 } features_e;
 
 void latchActiveFeatures(void);

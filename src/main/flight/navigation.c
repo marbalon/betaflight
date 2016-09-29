@@ -109,7 +109,7 @@ void navigationInit(gpsProfile_t *initialGpsProfile, pidProfile_t *pidProfile)
 #define GPS_LOW_SPEED_D_FILTER     1    // below .5m/s speed ignore D term for POSHOLD_RATE, theoretically this also removed D term induced noise
 
 static bool check_missed_wp(void);
-static void GPS_distance_cm_bearing(int32_t * lat1, int32_t * lon1, int32_t * lat2, int32_t * lon2, uint32_t * dist, int32_t * bearing);
+void GPS_distance_cm_bearing(int32_t * lat1, int32_t * lon1, int32_t * lat2, int32_t * lon2, uint32_t * dist, int32_t * bearing);
 //static void GPS_distance(int32_t lat1, int32_t lon1, int32_t lat2, int32_t lon2, uint16_t* dist, int16_t* bearing);
 static void GPS_calc_longitude_scaling(int32_t lat);
 static void GPS_calc_velocity(void);
@@ -455,7 +455,7 @@ static bool check_missed_wp(void)
 ////////////////////////////////////////////////////////////////////////////////////
 // Get distance between two points in cm
 // Get bearing from pos1 to pos2, returns an 1deg = 100 precision
-static void GPS_distance_cm_bearing(int32_t *currentLat1, int32_t *currentLon1, int32_t *destinationLat2, int32_t *destinationLon2, uint32_t *dist, int32_t *bearing)
+void GPS_distance_cm_bearing(int32_t *currentLat1, int32_t *currentLon1, int32_t *destinationLat2, int32_t *destinationLon2, uint32_t *dist, int32_t *bearing)
 {
     float dLat = *destinationLat2 - *currentLat1; // difference of latitude in 1/10 000 000 degrees
     float dLon = (float)(*destinationLon2 - *currentLon1) * GPS_scaleLonDown;

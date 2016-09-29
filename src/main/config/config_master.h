@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "rx/eleres.h"
+
 // System-wide
 typedef struct master_t {
     uint8_t version;
@@ -138,6 +140,9 @@ typedef struct master_t {
 #ifdef OSD
     osd_profile_t osdProfile;
 #endif
+#ifdef ELERES_RX
+    eleresConfig_t eleresConfig;
+#endif
 
     profile_t profile[MAX_PROFILE_COUNT];
     uint8_t current_profile_index;
@@ -166,9 +171,9 @@ typedef struct master_t {
 
     uint8_t magic_ef;                       // magic number, should be 0xEF
     uint8_t chk;                            // XOR checksum
-   
+
     char name[MAX_NAME_LENGTH+1];
-   
+
 } master_t;
 
 extern master_t masterConfig;

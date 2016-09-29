@@ -187,6 +187,10 @@ static void cliSdInfo(char *cmdline);
 static void cliBeeper(char *cmdline);
 #endif
 
+#ifdef ELERES_RX
+static void cliEleresBind(char *cmdline);
+#endif // ELERES_RX
+
 // buffer
 static char cliBuffer[48];
 static uint32_t bufferIndex = 0;
@@ -220,7 +224,8 @@ static const char * const featureNames[] = {
     "SERVO_TILT", "SOFTSERIAL", "GPS", "FAILSAFE",
     "SONAR", "TELEMETRY", "CURRENT_METER", "3D", "RX_PARALLEL_PWM",
     "RX_MSP", "RSSI_ADC", "LED_STRIP", "DISPLAY", "OSD",
-    "BLACKBOX", "CHANNEL_FORWARDING", "TRANSPONDER", "AIRMODE", NULL
+    "BLACKBOX", "CHANNEL_FORWARDING", "TRANSPONDER", "AIRMODE", "NONE",
+    "VTX", "RX_NRF24", "SOFTSPI", "RX_ELERES", NULL
 };
 
 // sync this with rxFailsafeChannelMode_e
@@ -286,6 +291,9 @@ const clicmd_t cmdTable[] = {
         "[master|profile|rates|all] {showdefaults}", cliDiff),
     CLI_COMMAND_DEF("dump", "dump configuration",
         "[master|profile|rates|all] {showdefaults}", cliDump),
+#ifdef ELERES_RX
+    CLI_COMMAND_DEF("eleres_bind", NULL, NULL, cliEleresBind),
+#endif // ELERES_RX
     CLI_COMMAND_DEF("exit", NULL, NULL, cliExit),
     CLI_COMMAND_DEF("feature", "configure features",
         "list\r\n"
@@ -747,7 +755,14 @@ const clivalue_t valueTable[] = {
     { "frsky_vfas_cell_voltage",    VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP,  &masterConfig.telemetryConfig.frsky_vfas_cell_voltage, .config.lookup = { TABLE_OFF_ON } },
     { "hott_alarm_sound_interval",  VAR_UINT8  | MASTER_VALUE,  &masterConfig.telemetryConfig.hottAlarmSoundInterval, .config.minmax = { 0,  120 } },
 #endif
-
+#ifdef ELERES_RX
+    { "eleres_freq",                VAR_UINT16  | MASTER_VALUE,  &masterConfig.eleresConfig.eleres_freq, .config.minmax = { 41500,  45000 }},
+    { "eleres_telemetry_en",        VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP,  &masterConfig.eleresConfig.eleres_telemetry_en, .config.lookup = { TABLE_OFF_ON } },
+    { "eleres_telemetry_power",     VAR_UINT8  | MASTER_VALUE,  &masterConfig.eleresConfig.eleres_telemetry_power, .config.minmax = { 0,  7 } },
+    { "eleres_loc_en",              VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP,  &masterConfig.eleresConfig.eleres_loc_en, .config.lookup = { TABLE_OFF_ON } },
+    { "eleres_loc_power",           VAR_UINT8  | MASTER_VALUE,  &masterConfig.eleresConfig.eleres_loc_power, .config.minmax = { 0,  7 } },
+    { "eleres_loc_delay",           VAR_UINT16  | MASTER_VALUE,  &masterConfig.eleresConfig.eleres_loc_delay, .config.minmax = { 30,  1800 } },
+#endif
     { "battery_capacity",           VAR_UINT16 | MASTER_VALUE,  &masterConfig.batteryConfig.batteryCapacity, .config.minmax = { 0,  20000 } },
     { "vbat_scale",                 VAR_UINT8  | MASTER_VALUE,  &masterConfig.batteryConfig.vbatscale, .config.minmax = { VBAT_SCALE_MIN,  VBAT_SCALE_MAX } },
     { "vbat_max_cell_voltage",      VAR_UINT8  | MASTER_VALUE,  &masterConfig.batteryConfig.vbatmaxcellvoltage, .config.minmax = { 10,  50 } },
@@ -2883,6 +2898,40 @@ void cliEnter(serialPort_t *serialPort)
     cliPrompt();
     ENABLE_ARMING_FLAG(PREVENT_ARMING);
 }
+
+#ifdef ELERES_RX
+static void cliEleresBind(char *cmdline)
+{
+    UNUSED(cmdline);
+	char buf[10];
+	uint8_t i;
+
+	if (!feature(FEATURE_RX_ELERES))
+	{
+		cliPrint("Eleres not active. Please enable feature ELERES and restart IMU\r\n");
+		return;
+	}
+
+	cliPrint("Waiting for correct bind signature....\r\n");
+	if (eLeReS_Bind())
+	{
+		cliPrint("Bind timeout!\r\n");
+	}
+	else
+	{
+		cliPrint("Signature: ");
+		for(i=0; i<4; i++)
+		{
+			itoa(masterConfig.eleresConfig.eleres_signature[i], buf, 16);
+			cliPrint(buf);
+			cliPrint(" ");
+		}
+		cliPrint("\r\n");
+		cliPrint("Bind OK!\r\nPlease restart your transmitter.\r\n");
+	}
+
+}
+#endif // ELERES_RX
 
 static void cliExit(char *cmdline)
 {

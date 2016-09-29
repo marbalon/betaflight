@@ -50,6 +50,7 @@
 #include "rx/xbus.h"
 #include "rx/ibus.h"
 #include "rx/jetiexbus.h"
+#include "rx/eleres.h"
 
 #include "rx/rx.h"
 
@@ -63,6 +64,7 @@ bool spektrumInit(rxConfig_t *rxConfig, rxRuntimeConfig_t *rxRuntimeConfig, rcRe
 bool sumdInit(rxConfig_t *rxConfig, rxRuntimeConfig_t *rxRuntimeConfig, rcReadRawDataPtr *callback);
 bool sumhInit(rxConfig_t *rxConfig, rxRuntimeConfig_t *rxRuntimeConfig, rcReadRawDataPtr *callback);
 bool ibusInit(rxConfig_t *rxConfig, rxRuntimeConfig_t *rxRuntimeConfig, rcReadRawDataPtr *callback);
+bool eleresInit(rxConfig_t *rxConfig, rxRuntimeConfig_t *rxRuntimeConfig, rcReadRawDataPtr *callback);
 
 void rxMspInit(rxConfig_t *rxConfig, rxRuntimeConfig_t *rxRuntimeConfig, rcReadRawDataPtr *callback);
 
@@ -182,6 +184,13 @@ void rxInit(rxConfig_t *rxConfig, modeActivationCondition_t *modeActivationCondi
             rcData[modeActivationCondition->auxChannelIndex + NON_AUX_CHANNEL_COUNT] = value;
         }
     }
+
+#ifdef ELERES_RX
+    if (feature(FEATURE_RX_ELERES)) {
+        rxRefreshRate = 20000;
+        eleresInit(rxConfig, &rxRuntimeConfig, &rcReadRawFunc);
+    }
+#endif
 
 #ifdef SERIAL_RX
     if (feature(FEATURE_RX_SERIAL)) {
@@ -339,6 +348,19 @@ void updateRx(uint32_t currentTime)
         rxDataReceived = false;
     }
 
+#ifdef ELERES_RX
+    if (feature(FEATURE_RX_ELERES)) {
+        rxDataReceived = eLeReS_control();
+
+        if (rxDataReceived) {
+            if (rxIsInFailsafeMode)
+                resumeRxSignal();
+            rxIsInFailsafeMode = false;
+            rxSignalReceived = !rxIsInFailsafeMode;
+            needRxSignalBefore = currentTime + DELAY_10_HZ;
+        }
+    }
+#endif
 
 #ifdef SERIAL_RX
     if (feature(FEATURE_RX_SERIAL)) {
@@ -591,6 +613,14 @@ void parseRcChannels(const char *input, rxConfig_t *rxConfig)
     }
 }
 
+#ifdef ELERES_RX
+void updateRSSIeleres(uint32_t currentTime)
+{
+    UNUSED(currentTime);
+    rssi = (eleres_rssi() - 18)*1024/106; //RSSI is in range 18-124
+}
+#endif // ELERES_RX
+
 void updateRSSIPWM(void)
 {
     int16_t pwmRssi = 0;
@@ -650,6 +680,10 @@ void updateRSSI(uint32_t currentTime)
         updateRSSIPWM();
     } else if (feature(FEATURE_RSSI_ADC)) {
         updateRSSIADC(currentTime);
+#ifdef ELERES_RX
+    } else if (feature(FEATURE_RX_ELERES)) {
+        updateRSSIeleres(currentTime);
+#endif // ELERES_RX
     }
 }
 

@@ -22,6 +22,8 @@
 #include "platform.h"
 
 int32_t BaroAlt = 0;
+int32_t baroPressure = 0;
+int32_t baroTemperature = 0;
 
 #ifdef BARO
 #include "common/maths.h"
@@ -33,8 +35,6 @@ int32_t BaroAlt = 0;
 
 baro_t baro;                        // barometer access functions
 uint16_t calibratingB = 0;      // baro calibration = get new ground pressure value
-int32_t baroPressure = 0;
-int32_t baroTemperature = 0;
 
 static int32_t baroGroundAltitude = 0;
 static int32_t baroGroundPressure = 0;

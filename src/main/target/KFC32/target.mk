@@ -7,6 +7,7 @@ DEVICE_FLAGS    = -DSTM32F10X_HD
 HSE_VALUE       = 16000000
 
 TARGET_SRC = \
+            rx/eleres.c \
             io/osd.c \
             drivers/accgyro_mpu.c \
             drivers/accgyro_spi_mpu6000.c \
