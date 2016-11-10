@@ -106,10 +106,6 @@
 
 
 #define LED_STRIP
-#define WS2811_TIMER                    TIM3
-#define WS2811_PIN                      PA6
-#define WS2811_DMA_TC_FLAG              DMA1_FLAG_TC6
-#define WS2811_DMA_HANDLER_IDENTIFER    DMA1_CH6_HANDLER
 
 #define OSD
 
@@ -126,7 +122,7 @@
 #define TARGET_IO_PORTB         0xffff
 #define TARGET_IO_PORTC         (BIT(0)|BIT(1)|BIT(2)|BIT(3)|BIT(4)|BIT(5))
 
-#define USABLE_TIMER_CHANNEL_COUNT 5
+#define USABLE_TIMER_CHANNEL_COUNT 6
 #define USED_TIMERS  (TIM_N(1) | TIM_N(2) | TIM_N(3) | TIM_N(4))
 
 #define TARGET_MOTOR_COUNT 4

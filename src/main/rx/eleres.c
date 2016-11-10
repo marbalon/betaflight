@@ -11,9 +11,10 @@
 #include <string.h>
 #include "platform.h"
 
-#include "build_config.h"
-#include "debug.h"
-#include "version.h"
+#include "build/build_config.h"
+#include "build/debug.h"
+
+#include "common/utils.h"
 
 #include "common/maths.h"
 #include "common/axis.h"
@@ -41,15 +42,11 @@
 #include "sensors/gyro.h"
 #include "sensors/battery.h"
 
-#include "io/display.h"
-#include "io/escservo.h"
-#include "io/rc_controls.h"
 #include "io/gimbal.h"
 #include "io/gps.h"
 #include "io/ledstrip.h"
 #include "io/serial.h"
 #include "io/serial_cli.h"
-#include "io/serial_msp.h"
 #include "io/statusindicator.h"
 #include "io/osd.h"
 
@@ -67,8 +64,9 @@
 
 #include "io/beeper.h"
 #include "drivers/bus_spi.h"
-#include "config/runtime_config.h"
-#include "config/config.h"
+#include "fc/config.h"
+#include "fc/rc_controls.h"
+#include "fc/runtime_config.h"
 #include "config/config_profile.h"
 #include "config/config_master.h"
 
@@ -221,7 +219,7 @@ void to_ready_mode(void) {
 
 //*****************************************************************************
 
-static uint16_t eleresRawRC(rxRuntimeConfig_t *rxRuntimeConfig, uint8_t chan)
+static uint16_t eleresRawRC(const rxRuntimeConfig_t *rxRuntimeConfig, uint8_t chan)
 {
     if (chan >= rxRuntimeConfig->channelCount)
     {
@@ -791,7 +789,7 @@ void telemetry_RX(void) {
 	tx_full = 1;
 }
 
-bool eleresInit(rxConfig_t *rxConfig, rxRuntimeConfig_t *rxRuntimeConfig, rcReadRawDataPtr *callback) {
+void eleresInit(const rxConfig_t *rxConfig, rxRuntimeConfig_t *rxRuntimeConfig) {
     UNUSED(rxConfig);
 
     rfmCsPin = IOGetByTag(IO_TAG(RFM_SPI_CS_PIN));
@@ -817,8 +815,8 @@ bool eleresInit(rxConfig_t *rxConfig, rxRuntimeConfig_t *rxRuntimeConfig, rcRead
 
 
     rxRuntimeConfig->channelCount = RC_CHANS;
-    if (callback)
-        *callback = eleresRawRC;
+    rxRuntimeConfig->rxRefreshRate = 20000;
+    rxRuntimeConfig->rcReadRawFunc = eleresRawRC;
 
   DISABLE_RFM;
 
@@ -846,8 +844,6 @@ bool eleresInit(rxConfig_t *rxConfig, rxRuntimeConfig_t *rxRuntimeConfig, rcRead
   ChannelHopping(1);
   RF_Mode = Receive;
     localizer_time = millis() + (1000L * cfg.eleres_loc_delay);
-
-    return true;
 }
 
 uint8_t eLeReS_Bind(void) {

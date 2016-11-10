@@ -25,4 +25,5 @@ typedef struct {
 
 void Finder_enable(void);
 int Finder_parse(tFinder_info *fi);
+void eleresInit(const rxConfig_t *rxConfig, rxRuntimeConfig_t *rxRuntimeConfig);
 
