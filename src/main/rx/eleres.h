@@ -1,6 +1,5 @@
 #pragma once
 
-bool eLeReS_control(void);
 uint8_t eLeReS_Bind(void);
 void Rfm_IRQ(void);
 uint8_t eleres_rssi(void);

@@ -229,7 +229,8 @@ static uint16_t eleresRawRC(const rxRuntimeConfig_t *rxRuntimeConfig, uint8_t ch
     return eleresData[chan];
 }
 
-bool eLeReS_control(void) {
+static uint8_t eLeReS_control(void)
+{
   uint16_t rcData4Values[RC_CHANS];
   static uint32_t qtest_time, guard_time, led_time;
   static uint8_t rx_frames, loc_cnt;
@@ -238,12 +239,12 @@ bool eLeReS_control(void) {
   uint16_t temp_int;
   uint32_t cr_time = millis();
   int red_led_local = 0;
-  bool res = false;
+  uint8_t res = RX_FRAME_PENDING;
 
 	if (!IORead(rfmIrqPin))
     {
         Rfm_IRQ();
-        return false; //we can't spend a lot of time here
+        return RX_FRAME_PENDING; //we can't spend a lot of time here
     }
 
 	//obsluga ledki....
@@ -346,7 +347,7 @@ bool eLeReS_control(void) {
 		DataReady &= 0xFC;
 		led_time = cr_time; //przyszla ramka wiec bede gasil lede
 
-		res = true;
+		res = RX_FRAME_COMPLETE;
   }
 
 	if (cfg.eleres_loc_en)
@@ -793,11 +794,11 @@ void eleresInit(const rxConfig_t *rxConfig, rxRuntimeConfig_t *rxRuntimeConfig) 
     UNUSED(rxConfig);
 
     rfmCsPin = IOGetByTag(IO_TAG(RFM_SPI_CS_PIN));
-    IOInit(rfmCsPin, OWNER_RX, RESOURCE_SPI_CS, 0);
+    IOInit(rfmCsPin, OWNER_RX_SPI_CS, 0);
     IOConfigGPIO(rfmCsPin, SPI_IO_CS_CFG);
 
     rfmIrqPin = IOGetByTag(IO_TAG(RFM_IRQ_PIN));
-    IOInit(rfmIrqPin, OWNER_RX, RESOURCE_NONE, 0);
+    IOInit(rfmIrqPin, OWNER_RX_SPI_CS, 0);
     IOConfigGPIO(rfmIrqPin, IOCFG_IN_FLOATING);
 
     spiSetDivisor(MAX7456_SPI_INSTANCE, SPI_CLOCK_STANDARD);
@@ -816,8 +817,8 @@ void eleresInit(const rxConfig_t *rxConfig, rxRuntimeConfig_t *rxRuntimeConfig) 
 
     rxRuntimeConfig->channelCount = RC_CHANS;
     rxRuntimeConfig->rxRefreshRate = 20000;
-    rxRuntimeConfig->rcReadRawFunc = eleresRawRC;
-
+    rxRuntimeConfig->rcReadRawFn = eleresRawRC;
+    rxRuntimeConfig->rcFrameStatusFn = eLeReS_control;
   DISABLE_RFM;
 
   //Tu zainicjowaæ przerwania itp.
